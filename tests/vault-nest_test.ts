@@ -75,3 +75,32 @@ Clarinet.test({
     assertEquals(block.receipts[2].result.expectErr(), "u102");
   },
 });
+
+Clarinet.test({
+  name: "Cannot deposit or withdraw zero amounts",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const wallet_1 = accounts.get("wallet_1")!;
+    
+    let block = chain.mineBlock([
+      Tx.contractCall("vault-nest", "create-vault", 
+        [types.ascii("Zero Test Vault"), types.uint(0)], 
+        wallet_1.address
+      ),
+      Tx.contractCall("vault-nest", "deposit",
+        [types.uint(0), types.uint(0)],
+        wallet_1.address
+      )
+    ]);
+    
+    assertEquals(block.receipts[1].result.expectErr(), "u104");
+    
+    block = chain.mineBlock([
+      Tx.contractCall("vault-nest", "withdraw",
+        [types.uint(0), types.uint(0)],
+        wallet_1.address
+      )
+    ]);
+    
+    assertEquals(block.receipts[0].result.expectErr(), "u104");
+  },
+});
