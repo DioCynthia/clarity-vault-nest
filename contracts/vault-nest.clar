@@ -6,6 +6,7 @@
 (define-constant err-vault-not-found (err u101))
 (define-constant err-time-lock-active (err u102))
 (define-constant err-insufficient-balance (err u103))
+(define-constant err-invalid-amount (err u104))
 
 ;; Data Variables
 (define-data-var next-vault-id uint u0)
@@ -45,6 +46,7 @@
     (
       (vault (unwrap! (map-get? vaults vault-id) (err err-vault-not-found)))
     )
+    (asserts! (> amount u0) (err err-invalid-amount))
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     (map-set vaults vault-id (merge vault {
       balance: (+ amount (get balance vault))
@@ -59,6 +61,7 @@
       (vault (unwrap! (map-get? vaults vault-id) (err err-vault-not-found)))
     )
     (asserts! (is-eq tx-sender (get owner vault)) (err err-not-authorized))
+    (asserts! (> amount u0) (err err-invalid-amount))
     (asserts! (>= (get balance vault) amount) (err err-insufficient-balance))
     (asserts! (can-withdraw? vault-id) (err err-time-lock-active))
     
